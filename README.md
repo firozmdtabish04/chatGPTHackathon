@@ -1,3 +1,5 @@
+# live Demo: https://minute-mind-psi.vercel.app/
+
 # 🚀 MeetMindAI – AI-Powered Smart Meeting Assistant
 
 MeetMindAI is an AI-powered meeting management platform that automatically converts meeting audio into text, generates intelligent summaries, extracts action items, assigns task owners, sends email reminders, and provides a real-time dashboard for tracking meetings and productivity.
