@@ -5,7 +5,7 @@ import { Menu, X, BrainCircuit, ChevronRight, Laptop } from "lucide-react";
 
 const navItems = [
   { name: "Home", path: "/" },
-  { name: "Features", path: "/features" },
+  { name: "Features", path: "/feature" },
   { name: "Pricing", path: "/pricing" },
   { name: "About", path: "/about" },
   { name: "Contact", path: "/contact" },
