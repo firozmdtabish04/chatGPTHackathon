@@ -1,6 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useRef, Suspense } from "react";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import {
+  Sphere,
+  MeshDistortMaterial,
+  Float,
+  Stars,
+  useTexture,
+} from "@react-three/drei";
+import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "../../hooks/useAuth"; // Ensure this path is correct
+import { useAuth } from "../../hooks/useAuth";
 import {
   Mic,
   CheckCircle2,
@@ -24,21 +33,82 @@ import {
   Sparkles,
 } from "lucide-react";
 
-// --- ANIMATION VARIANTS ---
+// --- 1. THE 3D EARTH COMPONENT ---
+function Earth() {
+  const earthRef = useRef();
+  const cloudsRef = useRef();
+
+  // Load high-quality textures
+  const [colorMap, nightMap, cloudsMap] = useTexture([
+    "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg",
+    "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_lights_2048.png",
+    "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_clouds_1024.png",
+  ]);
+
+  useFrame(({ clock }) => {
+    const elapsedTime = clock.getElapsedTime();
+    earthRef.current.rotation.y = elapsedTime / 10;
+    cloudsRef.current.rotation.y = elapsedTime / 8; // Clouds move slightly faster
+  });
+
+  return (
+    <group position={[1.2, -0.2, 0]} scale={1.8}>
+      {" "}
+      {/* Positioned to the right */}
+      {/* Ambient Glow / Atmosphere */}
+      <Sphere args={[1.02, 64, 64]}>
+        <meshStandardMaterial
+          color="#3b82f6"
+          transparent
+          opacity={0.1}
+          side={THREE.BackSide}
+        />
+      </Sphere>
+      {/* Earth Body */}
+      <mesh ref={earthRef}>
+        <sphereGeometry args={[1, 64, 64]} />
+        <meshStandardMaterial
+          map={colorMap}
+          emissiveMap={nightMap}
+          emissive={new THREE.Color("#ffaa00")}
+          emissiveIntensity={0.4}
+          metalness={0.4}
+          roughness={0.7}
+        />
+      </mesh>
+      {/* Cloud Layer */}
+      <mesh ref={cloudsRef}>
+        <sphereGeometry args={[1.01, 64, 64]} />
+        <meshStandardMaterial
+          map={cloudsMap}
+          transparent
+          opacity={0.3}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+// --- 2. ANIMATION VARIANTS ---
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.3 },
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
   },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+  },
 };
 
-// --- SUB-COMPONENT: NEW MEETING MODAL ---
+// --- 3. SUB-COMPONENT: NEW MEETING MODAL ---
 const NewMeetingModal = ({ isOpen, onClose }) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -46,7 +116,6 @@ const NewMeetingModal = ({ isOpen, onClose }) => {
 
   const handleUpload = async () => {
     setUploading(true);
-    // Simulate API call to your MeetingController
     setTimeout(() => {
       setUploading(false);
       onClose();
@@ -67,9 +136,9 @@ const NewMeetingModal = ({ isOpen, onClose }) => {
             className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            exit={{ opacity: 0, scale: 0.9, y: 30 }}
             className="relative w-full max-w-xl bg-slate-900 border border-white/10 rounded-[3rem] p-10 shadow-2xl overflow-hidden"
           >
             <button
@@ -78,7 +147,6 @@ const NewMeetingModal = ({ isOpen, onClose }) => {
             >
               <X size={24} />
             </button>
-
             <div className="flex items-center gap-4 mb-8">
               <div className="p-3.5 bg-blue-600 rounded-2xl shadow-lg shadow-blue-600/20 text-white">
                 <Mic size={24} />
@@ -87,7 +155,6 @@ const NewMeetingModal = ({ isOpen, onClose }) => {
                 New Analysis
               </h2>
             </div>
-
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">
@@ -101,7 +168,6 @@ const NewMeetingModal = ({ isOpen, onClose }) => {
                   className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm focus:ring-2 focus:ring-blue-500/40 outline-none transition-all"
                 />
               </div>
-
               <div
                 className={`border-2 border-dashed rounded-[2.5rem] p-12 flex flex-col items-center justify-center transition-all ${file ? "border-blue-500 bg-blue-500/5" : "border-slate-800 hover:border-slate-700 bg-slate-950/30"}`}
               >
@@ -119,7 +185,7 @@ const NewMeetingModal = ({ isOpen, onClose }) => {
                   {file ? (
                     <>
                       <FileAudio size={48} className="text-blue-500 mb-4" />
-                      <p className="text-sm font-bold text-white">
+                      <p className="text-sm font-bold text-white truncate max-w-[200px]">
                         {file.name}
                       </p>
                     </>
@@ -134,14 +200,12 @@ const NewMeetingModal = ({ isOpen, onClose }) => {
                   )}
                 </label>
               </div>
-
               <div className="bg-blue-600/5 border border-blue-500/10 rounded-2xl p-4 flex gap-3">
                 <Sparkles className="text-blue-500 shrink-0" size={18} />
                 <p className="text-[11px] text-slate-400 leading-relaxed">
                   AI will transcribe and extract action items automatically.
                 </p>
               </div>
-
               <button
                 onClick={handleUpload}
                 disabled={!file || !title || uploading}
@@ -163,94 +227,55 @@ const NewMeetingModal = ({ isOpen, onClose }) => {
   );
 };
 
-// --- MAIN COMPONENT ---
+// --- 4. MAIN DASHBOARD ---
 const Dashboard = () => {
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [tasks, setTasks] = useState([
-    { id: 1, text: "Update API documentation", priority: "High", done: false },
-    {
-      id: 2,
-      text: "Review meeting summaries",
-      priority: "Medium",
-      done: false,
-    },
-    { id: 3, text: "Send email to stakeholders", priority: "Low", done: true },
-  ]);
-
-  const stats = [
-    {
-      label: "Total Meetings",
-      value: "24",
-      change: "+12%",
-      icon: Mic,
-      color: "blue",
-    },
-    {
-      label: "Tasks Pending",
-      value: "12",
-      change: "-2",
-      icon: Clock,
-      color: "amber",
-    },
-    {
-      label: "Completion Rate",
-      value: "89%",
-      change: "+5%",
-      icon: CheckCircle2,
-      color: "emerald",
-    },
-    {
-      label: "AI Hours Saved",
-      value: "5.2h",
-      change: "+1.4h",
-      icon: TrendingUp,
-      color: "purple",
-    },
-  ];
-
-  const recentMeetings = [
-    {
-      id: 1,
-      title: "Product Sync - Q3",
-      date: "Today, 10:30 AM",
-      duration: "45m",
-      status: "Summarized",
-      members: 4,
-    },
-    {
-      id: 2,
-      title: "Client Feedback Session",
-      date: "Yesterday",
-      duration: "32m",
-      status: "Summarized",
-      members: 2,
-    },
-    {
-      id: 3,
-      title: "Marketing Brainstorm",
-      date: "Oct 10, 2023",
-      duration: "1h 10m",
-      status: "Processing",
-      members: 8,
-    },
-  ];
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 pt-28 pb-12 px-6 md:px-12 selection:bg-blue-500/30">
+    <div className="relative min-h-screen bg-[#020617] text-slate-200 overflow-x-hidden">
+      {/* 3D BACKGROUND LAYER */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-60">
+        <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+          <Suspense fallback={null}>
+            <Stars
+              radius={300}
+              depth={60}
+              count={20000}
+              factor={7}
+              saturation={0}
+              fade
+            />
+            <ambientLight intensity={0.4} />
+            <pointLight
+              position={[10, 10, 10]}
+              intensity={1.5}
+              color="#ffffff"
+            />
+            <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
+              <Earth />
+            </Float>
+          </Suspense>
+        </Canvas>
+      </div>
+
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px]" />
+      </div>
+
       <NewMeetingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
 
+      {/* CONTENT LAYER */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="max-w-7xl mx-auto space-y-10"
+        className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 pt-32 pb-20 space-y-12"
       >
-        {/* HEADER */}
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           <motion.div variants={itemVariants}>
             <div className="flex items-center gap-2 text-blue-500 font-bold text-xs uppercase tracking-[0.2em] mb-2">
               <span className="w-8 h-[2px] bg-blue-500"></span> Welcome Back
@@ -260,19 +285,10 @@ const Dashboard = () => {
               <span className="text-blue-600">Hub.</span>
             </h1>
           </motion.div>
-
           <motion.div
             variants={itemVariants}
-            className="flex items-center gap-3"
+            className="flex items-center gap-4"
           >
-            <div className="relative group hidden sm:block">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
-              <input
-                type="text"
-                placeholder="Search sessions..."
-                className="bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-6 text-sm focus:ring-2 focus:ring-blue-500/40 outline-none w-64 transition-all"
-              />
-            </div>
             <button
               onClick={() => setIsModalOpen(true)}
               className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-bold shadow-2xl shadow-blue-600/20 transition-all active:scale-95 group"
@@ -286,150 +302,102 @@ const Dashboard = () => {
           </motion.div>
         </header>
 
-        {/* STATS GRID */}
+        {/* STATS SECTION */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, i) => (
+          {[
+            {
+              label: "Meetings",
+              value: "24",
+              icon: Mic,
+              color: "text-blue-500",
+            },
+            {
+              label: "Tasks",
+              value: "12",
+              icon: Clock,
+              color: "text-amber-500",
+            },
+            {
+              label: "Rate",
+              value: "89%",
+              icon: CheckCircle2,
+              color: "text-emerald-500",
+            },
+            {
+              label: "Saved",
+              value: "5.2h",
+              icon: TrendingUp,
+              color: "text-purple-500",
+            },
+          ].map((stat, i) => (
             <motion.div
               key={i}
               variants={itemVariants}
-              className="group relative bg-slate-900/40 border border-white/5 p-6 rounded-[2.5rem] overflow-hidden hover:border-blue-500/20 transition-colors"
+              className="bg-slate-900/40 border border-white/5 p-8 rounded-[2.5rem] backdrop-blur-xl hover:border-blue-500/20 transition-all group"
             >
-              <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <ArrowUpRight size={18} className="text-slate-600" />
+              <div
+                className={`p-4 rounded-2xl bg-white/5 ${stat.color} mb-6 w-fit shadow-inner group-hover:scale-110 transition-transform`}
+              >
+                <stat.icon size={22} />
               </div>
-              <div className="flex items-center gap-4 mb-6">
-                <div
-                  className={`p-3.5 rounded-2xl bg-${stat.color}-500/10 text-${stat.color}-500 shadow-inner`}
-                >
-                  <stat.icon size={22} />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  {stat.label}
-                </span>
-              </div>
-              <div className="flex items-end justify-between">
-                <h3 className="text-4xl font-black text-white">{stat.value}</h3>
-                <span
-                  className={`text-xs font-bold ${stat.change.includes("+") ? "text-emerald-500" : "text-slate-500"}`}
-                >
-                  {stat.change}
-                </span>
-              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">
+                {stat.label}
+              </p>
+              <h3 className="text-4xl font-black text-white">{stat.value}</h3>
             </motion.div>
           ))}
         </div>
 
-        {/* MAIN SECTION */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* RECENT SESSIONS */}
+        {/* MAIN GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <motion.div
             variants={itemVariants}
-            className="lg:col-span-2 bg-slate-900/20 border border-white/5 rounded-[3rem] p-10 backdrop-blur-3xl shadow-2xl"
+            className="lg:col-span-2 bg-slate-900/20 border border-white/5 rounded-[3.5rem] p-10 backdrop-blur-3xl shadow-2xl"
           >
-            <div className="flex items-center justify-between mb-10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-500">
-                  <LayoutGrid size={20} />
-                </div>
-                <h2 className="text-2xl font-black text-white uppercase tracking-tight">
-                  Recent Sessions
-                </h2>
-              </div>
-              <button className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-                <Filter size={18} />
-              </button>
-            </div>
-
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-8">
+              Recent Sessions
+            </h2>
             <div className="space-y-4">
-              {recentMeetings.map((meeting) => (
-                <div
-                  key={meeting.id}
-                  className="group flex items-center justify-between p-5 rounded-3xl bg-white/5 border border-transparent hover:border-blue-500/20 hover:bg-white/[0.07] transition-all cursor-pointer"
-                >
-                  <div className="flex items-center gap-5">
-                    <div className="p-4 bg-slate-950 rounded-2xl shadow-xl group-hover:scale-110 transition-transform">
-                      <FileText className="text-blue-500" size={24} />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">
-                        {meeting.title}
-                      </h4>
-                      <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
-                        <span className="flex items-center gap-1.5">
-                          <CalendarIcon size={14} /> {meeting.date}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <Users size={14} /> {meeting.members} members
-                        </span>
+              {["Product Sync", "Client Review", "Design Sprint"].map(
+                (item, idx) => (
+                  <div
+                    key={idx}
+                    className="group flex items-center justify-between p-6 rounded-[2rem] bg-white/[0.03] border border-transparent hover:border-blue-500/20 hover:bg-white/[0.06] transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center gap-6">
+                      <div className="p-4 bg-slate-950 rounded-2xl shadow-xl group-hover:rotate-6 transition-transform">
+                        <FileText className="text-blue-500" size={24} />
                       </div>
+                      <h4 className="text-lg font-bold text-white">{item}</h4>
                     </div>
+                    <ChevronRight
+                      size={24}
+                      className="text-slate-600 group-hover:text-white transition-colors"
+                    />
                   </div>
-                  <div className="flex items-center gap-6">
-                    <span
-                      className={`text-[10px] font-black px-4 py-1.5 rounded-xl tracking-widest uppercase ${meeting.status === "Summarized" ? "bg-emerald-500/10 text-emerald-500" : "bg-blue-600/10 text-blue-500 animate-pulse"}`}
-                    >
-                      {meeting.status}
-                    </span>
-                    <button className="p-2 text-slate-600 hover:text-white transition-colors">
-                      <ChevronRight size={20} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ),
+              )}
             </div>
           </motion.div>
 
-          {/* FOCUS LIST */}
           <motion.div
             variants={itemVariants}
-            className="bg-slate-900/20 border border-white/5 rounded-[3rem] p-10 backdrop-blur-3xl shadow-2xl"
+            className="bg-slate-900/20 border border-white/5 rounded-[3.5rem] p-10 backdrop-blur-3xl shadow-2xl"
           >
-            <div className="flex items-center gap-3 mb-10">
-              <AlertCircle size={22} className="text-blue-500" />
-              <h2 className="text-2xl font-black text-white uppercase tracking-tight">
-                Focus List
-              </h2>
-            </div>
-
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-8">
+              Focus List
+            </h2>
             <div className="space-y-5">
-              {tasks.map((task) => (
+              {["Finalize Docs", "Email Client"].map((task, idx) => (
                 <div
-                  key={task.id}
-                  className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:bg-white/[0.05] transition-all"
+                  key={idx}
+                  className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5 group hover:bg-white/[0.05] transition-all"
                 >
-                  <button
-                    onClick={() =>
-                      setTasks(
-                        tasks.map((t) =>
-                          t.id === task.id ? { ...t, done: !t.done } : t,
-                        ),
-                      )
-                    }
-                    className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${task.done ? "bg-blue-600 border-blue-600" : "border-slate-700 group-hover:border-blue-500"}`}
-                  >
-                    {task.done && (
-                      <CheckCircle2 size={14} className="text-white" />
-                    )}
-                  </button>
-                  <div className="flex-1">
-                    <p
-                      className={`text-sm font-bold transition-all ${task.done ? "text-slate-600 line-through" : "text-white"}`}
-                    >
-                      {task.text}
-                    </p>
-                    <span
-                      className={`text-[10px] font-black uppercase tracking-tighter mt-1 block ${task.priority === "High" ? "text-rose-500" : task.priority === "Medium" ? "text-amber-500" : "text-slate-500"}`}
-                    >
-                      {task.priority} Priority
-                    </span>
-                  </div>
+                  <div className="w-6 h-6 rounded-lg border-2 border-slate-700 group-hover:border-blue-500 transition-colors" />
+                  <p className="text-sm font-bold text-white">{task}</p>
                 </div>
               ))}
             </div>
-
-            <button className="w-full mt-10 py-4 bg-blue-600/10 border border-blue-500/20 rounded-2xl text-xs font-black uppercase tracking-widest text-blue-500 hover:bg-blue-600 hover:text-white transition-all">
-              Launch Task Manager
-            </button>
           </motion.div>
         </div>
       </motion.div>
