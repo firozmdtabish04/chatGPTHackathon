@@ -165,14 +165,14 @@ const Navbar = () => {
                   className="flex items-center gap-3 p-1.5 pr-4 bg-slate-900 border border-white/10 rounded-full hover:ring-4 hover:ring-blue-500/10 transition-all"
                 >
                   <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-black">
-                    {user?.name
+                    {user?.fullName
                       ?.split(" ")
                       .map((n) => n[0])
                       .join("")
                       .toUpperCase() || "U"}
                   </div>
                   <span className="hidden sm:block text-sm font-bold text-white truncate max-w-[100px]">
-                    {user?.name || "User"}
+                    {user?.fullName || "User"}
                   </span>
                 </button>
 

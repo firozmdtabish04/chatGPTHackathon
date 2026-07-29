@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../../hooks/useAuth"; // Ensure this path is correct
 import {
   Mic,
   CheckCircle2,
@@ -16,8 +17,14 @@ import {
   ArrowUpRight,
   Filter,
   LayoutGrid,
+  X,
+  Upload,
+  FileAudio,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
-import Navbar from "../../components/navbar/Navbar";
+
+// --- ANIMATION VARIANTS ---
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -31,7 +38,135 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
+// --- SUB-COMPONENT: NEW MEETING MODAL ---
+const NewMeetingModal = ({ isOpen, onClose }) => {
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [title, setTitle] = useState("");
+
+  const handleUpload = async () => {
+    setUploading(true);
+    // Simulate API call to your MeetingController
+    setTimeout(() => {
+      setUploading(false);
+      onClose();
+      setFile(null);
+      setTitle("");
+    }, 2000);
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="relative w-full max-w-xl bg-slate-900 border border-white/10 rounded-[3rem] p-10 shadow-2xl overflow-hidden"
+          >
+            <button
+              onClick={onClose}
+              className="absolute top-8 right-8 text-slate-500 hover:text-white transition-colors"
+            >
+              <X size={24} />
+            </button>
+
+            <div className="flex items-center gap-4 mb-8">
+              <div className="p-3.5 bg-blue-600 rounded-2xl shadow-lg shadow-blue-600/20 text-white">
+                <Mic size={24} />
+              </div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+                New Analysis
+              </h2>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">
+                  Session Title
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Q3 Strategic Planning"
+                  className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm focus:ring-2 focus:ring-blue-500/40 outline-none transition-all"
+                />
+              </div>
+
+              <div
+                className={`border-2 border-dashed rounded-[2.5rem] p-12 flex flex-col items-center justify-center transition-all ${file ? "border-blue-500 bg-blue-500/5" : "border-slate-800 hover:border-slate-700 bg-slate-950/30"}`}
+              >
+                <input
+                  type="file"
+                  id="audio-upload"
+                  className="hidden"
+                  accept="audio/*"
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
+                <label
+                  htmlFor="audio-upload"
+                  className="cursor-pointer flex flex-col items-center text-center"
+                >
+                  {file ? (
+                    <>
+                      <FileAudio size={48} className="text-blue-500 mb-4" />
+                      <p className="text-sm font-bold text-white">
+                        {file.name}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={32} className="text-slate-500 mb-4" />
+                      <p className="text-sm font-bold text-slate-300">
+                        Drop audio or{" "}
+                        <span className="text-blue-500">browse</span>
+                      </p>
+                    </>
+                  )}
+                </label>
+              </div>
+
+              <div className="bg-blue-600/5 border border-blue-500/10 rounded-2xl p-4 flex gap-3">
+                <Sparkles className="text-blue-500 shrink-0" size={18} />
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  AI will transcribe and extract action items automatically.
+                </p>
+              </div>
+
+              <button
+                onClick={handleUpload}
+                disabled={!file || !title || uploading}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold rounded-2xl shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 transition-all"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} /> Analyzing...
+                  </>
+                ) : (
+                  "Start AI Analysis"
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// --- MAIN COMPONENT ---
 const Dashboard = () => {
+  const { user } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [tasks, setTasks] = useState([
     { id: 1, text: "Update API documentation", priority: "High", done: false },
     {
@@ -102,214 +237,203 @@ const Dashboard = () => {
   ];
 
   return (
-    <>
-      <Navbar />
+    <div className="min-h-screen bg-[#020617] text-slate-200 pt-28 pb-12 px-6 md:px-12 selection:bg-blue-500/30">
+      <NewMeetingModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
 
-      <div className="min-h-screen bg-[#020617] text-slate-200 pt-28 pb-12 px-6 md:px-12 selection:bg-blue-500/30">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="max-w-7xl mx-auto space-y-10"
-        >
-          {/* --- HEADER --- */}
-          <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <motion.div variants={itemVariants}>
-              <div className="flex items-center gap-2 text-blue-500 font-bold text-xs uppercase tracking-[0.2em] mb-2">
-                <span className="w-8 h-[2px] bg-blue-500"></span> Overview
-              </div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
-                Insight <span className="text-blue-600">Hub.</span>
-              </h1>
-            </motion.div>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-7xl mx-auto space-y-10"
+      >
+        {/* HEADER */}
+        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <motion.div variants={itemVariants}>
+            <div className="flex items-center gap-2 text-blue-500 font-bold text-xs uppercase tracking-[0.2em] mb-2">
+              <span className="w-8 h-[2px] bg-blue-500"></span> Welcome Back
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
+              {user?.fullName?.split(" ")[0] || "Insight"}{" "}
+              <span className="text-blue-600">Hub.</span>
+            </h1>
+          </motion.div>
 
-            <motion.div
-              variants={itemVariants}
-              className="flex items-center gap-3"
+          <motion.div
+            variants={itemVariants}
+            className="flex items-center gap-3"
+          >
+            <div className="relative group hidden sm:block">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
+              <input
+                type="text"
+                placeholder="Search sessions..."
+                className="bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-6 text-sm focus:ring-2 focus:ring-blue-500/40 outline-none w-64 transition-all"
+              />
+            </div>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-bold shadow-2xl shadow-blue-600/20 transition-all active:scale-95 group"
             >
-              <div className="relative group hidden sm:block">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Search meetings..."
-                  className="bg-slate-900/50 border border-white/5 rounded-2xl py-3 pl-12 pr-6 text-sm focus:ring-2 focus:ring-blue-500/40 outline-none w-64 transition-all"
-                />
-              </div>
-              <button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-2xl font-bold shadow-2xl shadow-blue-600/20 transition-all active:scale-95 group">
-                <Plus
-                  size={20}
-                  className="group-hover:rotate-90 transition-transform duration-300"
-                />
-                <span>Record Meeting</span>
-              </button>
-            </motion.div>
-          </header>
+              <Plus
+                size={20}
+                className="group-hover:rotate-90 transition-transform duration-300"
+              />
+              <span>Record Meeting</span>
+            </button>
+          </motion.div>
+        </header>
 
-          {/* --- STATS GRID --- */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={i}
-                variants={itemVariants}
-                className="group relative bg-slate-900/40 border border-white/5 p-6 rounded-[2.5rem] overflow-hidden hover:border-blue-500/20 transition-colors"
-              >
-                <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ArrowUpRight size={18} className="text-slate-600" />
-                </div>
-                <div className="flex items-center gap-4 mb-6">
-                  <div
-                    className={`p-3.5 rounded-2xl bg-${stat.color}-500/10 text-${stat.color}-500 shadow-inner`}
-                  >
-                    <stat.icon size={22} />
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    {stat.label}
-                  </span>
-                </div>
-                <div className="flex items-end justify-between">
-                  <h3 className="text-4xl font-black text-white">
-                    {stat.value}
-                  </h3>
-                  <span
-                    className={`text-xs font-bold ${stat.change.includes("+") ? "text-emerald-500" : "text-slate-500"}`}
-                  >
-                    {stat.change}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* --- MAIN SECTION --- */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* RECENT MEETINGS */}
+        {/* STATS GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, i) => (
             <motion.div
+              key={i}
               variants={itemVariants}
-              className="lg:col-span-2 bg-slate-900/20 border border-white/5 rounded-[3rem] p-10 backdrop-blur-3xl shadow-2xl"
+              className="group relative bg-slate-900/40 border border-white/5 p-6 rounded-[2.5rem] overflow-hidden hover:border-blue-500/20 transition-colors"
             >
-              <div className="flex items-center justify-between mb-10">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-500">
-                    <LayoutGrid size={20} />
-                  </div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">
-                    Recent Sessions
-                  </h2>
-                </div>
-                <button className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-                  <Filter size={18} />
-                </button>
+              <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <ArrowUpRight size={18} className="text-slate-600" />
               </div>
-
-              <div className="space-y-4">
-                {recentMeetings.map((meeting) => (
-                  <div
-                    key={meeting.id}
-                    className="group flex items-center justify-between p-5 rounded-3xl bg-white/5 border border-transparent hover:border-blue-500/20 hover:bg-white/[0.07] transition-all"
-                  >
-                    <div className="flex items-center gap-5">
-                      <div className="p-4 bg-slate-950 rounded-2xl shadow-xl group-hover:scale-110 transition-transform">
-                        <FileText className="text-blue-500" size={24} />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">
-                          {meeting.title}
-                        </h4>
-                        <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
-                          <span className="flex items-center gap-1.5">
-                            <CalendarIcon size={14} /> {meeting.date}
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Users size={14} /> {meeting.members} participants
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <span
-                        className={`text-[10px] font-black px-4 py-1.5 rounded-xl tracking-widest uppercase ${
-                          meeting.status === "Summarized"
-                            ? "bg-emerald-500/10 text-emerald-500"
-                            : "bg-blue-600/10 text-blue-500 animate-pulse"
-                        }`}
-                      >
-                        {meeting.status}
-                      </span>
-                      <button className="p-2 text-slate-600 hover:text-white transition-colors">
-                        <ChevronRight size={20} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center gap-4 mb-6">
+                <div
+                  className={`p-3.5 rounded-2xl bg-${stat.color}-500/10 text-${stat.color}-500 shadow-inner`}
+                >
+                  <stat.icon size={22} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  {stat.label}
+                </span>
+              </div>
+              <div className="flex items-end justify-between">
+                <h3 className="text-4xl font-black text-white">{stat.value}</h3>
+                <span
+                  className={`text-xs font-bold ${stat.change.includes("+") ? "text-emerald-500" : "text-slate-500"}`}
+                >
+                  {stat.change}
+                </span>
               </div>
             </motion.div>
+          ))}
+        </div>
 
-            {/* ACTION ITEMS */}
-            <motion.div
-              variants={itemVariants}
-              className="bg-slate-900/20 border border-white/5 rounded-[3rem] p-10 backdrop-blur-3xl"
-            >
-              <div className="flex items-center gap-3 mb-10">
-                <AlertCircle size={22} className="text-blue-500" />
+        {/* MAIN SECTION */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* RECENT SESSIONS */}
+          <motion.div
+            variants={itemVariants}
+            className="lg:col-span-2 bg-slate-900/20 border border-white/5 rounded-[3rem] p-10 backdrop-blur-3xl shadow-2xl"
+          >
+            <div className="flex items-center justify-between mb-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-500">
+                  <LayoutGrid size={20} />
+                </div>
                 <h2 className="text-2xl font-black text-white uppercase tracking-tight">
-                  Focus List
+                  Recent Sessions
                 </h2>
               </div>
+              <button className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                <Filter size={18} />
+              </button>
+            </div>
 
-              <div className="space-y-5">
-                {tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:bg-white/[0.05] transition-all"
-                  >
-                    <button
-                      onClick={() =>
-                        setTasks(
-                          tasks.map((t) =>
-                            t.id === task.id ? { ...t, done: !t.done } : t,
-                          ),
-                        )
-                      }
-                      className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                        task.done
-                          ? "bg-blue-600 border-blue-600"
-                          : "border-slate-700 group-hover:border-blue-500"
-                      }`}
-                    >
-                      {task.done && (
-                        <CheckCircle2 size={14} className="text-white" />
-                      )}
-                    </button>
-                    <div className="flex-1">
-                      <p
-                        className={`text-sm font-bold transition-all ${task.done ? "text-slate-600 line-through" : "text-white"}`}
-                      >
-                        {task.text}
-                      </p>
-                      <span
-                        className={`text-[10px] font-black uppercase tracking-tighter mt-1 block ${
-                          task.priority === "High"
-                            ? "text-rose-500"
-                            : task.priority === "Medium"
-                              ? "text-amber-500"
-                              : "text-slate-500"
-                        }`}
-                      >
-                        {task.priority} Priority
-                      </span>
+            <div className="space-y-4">
+              {recentMeetings.map((meeting) => (
+                <div
+                  key={meeting.id}
+                  className="group flex items-center justify-between p-5 rounded-3xl bg-white/5 border border-transparent hover:border-blue-500/20 hover:bg-white/[0.07] transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-5">
+                    <div className="p-4 bg-slate-950 rounded-2xl shadow-xl group-hover:scale-110 transition-transform">
+                      <FileText className="text-blue-500" size={24} />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">
+                        {meeting.title}
+                      </h4>
+                      <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
+                        <span className="flex items-center gap-1.5">
+                          <CalendarIcon size={14} /> {meeting.date}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Users size={14} /> {meeting.members} members
+                        </span>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="flex items-center gap-6">
+                    <span
+                      className={`text-[10px] font-black px-4 py-1.5 rounded-xl tracking-widest uppercase ${meeting.status === "Summarized" ? "bg-emerald-500/10 text-emerald-500" : "bg-blue-600/10 text-blue-500 animate-pulse"}`}
+                    >
+                      {meeting.status}
+                    </span>
+                    <button className="p-2 text-slate-600 hover:text-white transition-colors">
+                      <ChevronRight size={20} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
 
-              <button className="w-full mt-10 py-4 bg-blue-600/10 border border-blue-500/20 rounded-2xl text-xs font-black uppercase tracking-widest text-blue-500 hover:bg-blue-600 hover:text-white transition-all shadow-lg shadow-blue-600/5">
-                Launch Task Manager
-              </button>
-            </motion.div>
-          </div>
-        </motion.div>
-      </div>
-    </>
+          {/* FOCUS LIST */}
+          <motion.div
+            variants={itemVariants}
+            className="bg-slate-900/20 border border-white/5 rounded-[3rem] p-10 backdrop-blur-3xl shadow-2xl"
+          >
+            <div className="flex items-center gap-3 mb-10">
+              <AlertCircle size={22} className="text-blue-500" />
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+                Focus List
+              </h2>
+            </div>
+
+            <div className="space-y-5">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:bg-white/[0.05] transition-all"
+                >
+                  <button
+                    onClick={() =>
+                      setTasks(
+                        tasks.map((t) =>
+                          t.id === task.id ? { ...t, done: !t.done } : t,
+                        ),
+                      )
+                    }
+                    className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${task.done ? "bg-blue-600 border-blue-600" : "border-slate-700 group-hover:border-blue-500"}`}
+                  >
+                    {task.done && (
+                      <CheckCircle2 size={14} className="text-white" />
+                    )}
+                  </button>
+                  <div className="flex-1">
+                    <p
+                      className={`text-sm font-bold transition-all ${task.done ? "text-slate-600 line-through" : "text-white"}`}
+                    >
+                      {task.text}
+                    </p>
+                    <span
+                      className={`text-[10px] font-black uppercase tracking-tighter mt-1 block ${task.priority === "High" ? "text-rose-500" : task.priority === "Medium" ? "text-amber-500" : "text-slate-500"}`}
+                    >
+                      {task.priority} Priority
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button className="w-full mt-10 py-4 bg-blue-600/10 border border-blue-500/20 rounded-2xl text-xs font-black uppercase tracking-widest text-blue-500 hover:bg-blue-600 hover:text-white transition-all">
+              Launch Task Manager
+            </button>
+          </motion.div>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 

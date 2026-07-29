@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post("/auth/login", credentials);
 
     const authUser = {
+      fullName: res.data.fullName,
       email: res.data.email,
       role: res.data.role,
     };
