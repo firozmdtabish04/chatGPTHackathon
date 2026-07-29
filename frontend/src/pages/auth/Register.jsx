@@ -141,9 +141,9 @@ const Register = () => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10 w-full max-w-lg md:max-w-2xl"
+        className="relative z-10 w-full max-w-lg md:max-w-2xl pt-16"
       >
-        <div className="bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-6 sm:p-10 md:p-12 shadow-2xl">
+        <div className="bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-6 sm:p-10 md:p-12 shadow-2xl ">
           {/* Header */}
           <motion.div
             variants={itemVariants}
