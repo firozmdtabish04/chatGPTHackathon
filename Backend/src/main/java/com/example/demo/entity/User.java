@@ -22,7 +22,7 @@ import lombok.Setter;
 @Builder
 public class User extends BaseEntity {
 
-	@Column(nullable = false)
+	@Column(nullable = false, name = "full_name")
 	private String fullName;
 
 	@Column(nullable = false, unique = true)

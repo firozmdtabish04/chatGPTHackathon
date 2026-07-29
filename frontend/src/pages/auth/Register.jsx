@@ -108,7 +108,7 @@ const Register = () => {
         animate={{ opacity: 1, x: 0 }}
         className="absolute top-6 left-4 sm:top-10 sm:left-10 z-50"
       >
-        <Link
+        {/* <Link
           to="/"
           className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
         >
@@ -118,7 +118,7 @@ const Register = () => {
           <span className="text-xs font-bold tracking-widest hidden sm:block uppercase">
             Back
           </span>
-        </Link>
+        </Link> */}
       </motion.div>
 
       {/* 2. THREE.JS LAYER - Fixed and Backgrounded */}

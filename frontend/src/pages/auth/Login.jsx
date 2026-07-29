@@ -113,9 +113,9 @@ const Login = () => {
         animate={{ opacity: 1, x: 0 }}
         className="absolute top-8 left-8 z-50"
       >
-        <Link
+        {/* <Link
           to="/"
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition-all group"
+          className="flex items-center gap-2 text-slate-400 hover:text-white transition-all group pt-24"
         >
           <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover:bg-blue-600 group-hover:border-blue-500 transition-all">
             <ArrowLeft size={18} />
@@ -123,7 +123,7 @@ const Login = () => {
           <span className="text-xs font-bold tracking-widest hidden sm:block uppercase">
             Go Back
           </span>
-        </Link>
+        </Link> */}
       </motion.div>
 
       {/* LOGIN CARD */}
