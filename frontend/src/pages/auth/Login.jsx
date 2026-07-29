@@ -92,7 +92,7 @@ const Login = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-slate-950 flex items-center justify-center p-4 overflow-hidden">
+    <div className="relative min-h-screen w-full bg-slate-950 flex items-center justify-center pt-24 overflow-hidden">
       {/* BACKGROUND ELEMENTS */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <Canvas camera={{ position: [0, 0, 1] }}>
