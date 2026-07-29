@@ -4,7 +4,8 @@ import { Points, PointMaterial } from "@react-three/drei";
 import * as random from "maath/random/dist/maath-random.esm";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
 // Icons
 import {
   Mail,
@@ -52,6 +53,22 @@ function ParticleBackground(props) {
 }
 
 const Register = () => {
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const handleChange = (e) => {
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
   // Animation Variants
   const containerVariants = {
     hidden: { opacity: 0, scale: 0.95 },
@@ -65,6 +82,22 @@ const Register = () => {
   const itemVariants = {
     hidden: { opacity: 0, y: 15 },
     visible: { opacity: 1, y: 0 },
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await api.post("/auth/register", form);
+
+      navigate("/login");
+    } catch (err) {
+      setError(err.response?.data?.message || "Registration failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -128,10 +161,7 @@ const Register = () => {
           </motion.div>
 
           {/* Form */}
-          <form
-            className="space-y-4 sm:space-y-6"
-            onSubmit={(e) => e.preventDefault()}
-          >
+          <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
             {/* Grid Layout for Name and Email on Desktop */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <motion.div variants={itemVariants} className="space-y-2">
@@ -142,7 +172,11 @@ const Register = () => {
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="text"
-                    placeholder="John Doe"
+                    name="fullName"
+                    value={form.fullName}
+                    onChange={handleChange}
+                    required
+                    placeholder="Tabish Firoz"
                     className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-3.5 sm:py-4 pl-11 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
                   />
                 </div>
@@ -156,7 +190,11 @@ const Register = () => {
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="email"
-                    placeholder="john@example.com"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    required
+                    placeholder="tabish@example.com"
                     className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-3.5 sm:py-4 pl-11 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
                   />
                 </div>
@@ -171,19 +209,30 @@ const Register = () => {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
                   placeholder="••••••••"
                   className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-3.5 sm:py-4 pl-11 pr-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
                 />
               </div>
             </motion.div>
-
+            {error && (
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+                {error}
+              </div>
+            )}
             <motion.button
+              type="submit"
+              disabled={loading}
               variants={itemVariants}
               whileTap={{ scale: 0.98 }}
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 sm:py-4 rounded-2xl shadow-xl shadow-blue-600/20 flex items-center justify-center group transition-all"
+              className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-600/20 flex items-center justify-center"
             >
-              Get Started
-              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              {loading ? "Creating Account..." : "Get Started"}
+
+              {!loading && <ArrowRight className="ml-2 w-4 h-4" />}
             </motion.button>
           </form>
 
