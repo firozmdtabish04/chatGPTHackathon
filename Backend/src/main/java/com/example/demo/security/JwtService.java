@@ -1,5 +1,6 @@
 package com.example.demo.security;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 @Service
@@ -54,7 +54,7 @@ public class JwtService {
 
 		return Jwts.builder().setClaims(claims).setSubject(username).setIssuedAt(new Date())
 				.setExpiration(new Date(System.currentTimeMillis() + expiration))
-				.signWith(getSigningKey(), SignatureAlgorithm.HS384).compact();
+				.signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
 	}
 
 	// ==========================
@@ -79,9 +79,7 @@ public class JwtService {
 
 	public boolean isTokenValid(String token, UserDetails userDetails) {
 
-		String username = extractUsername(token);
-
-		return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+		return extractUsername(token).equals(userDetails.getUsername()) && !isTokenExpired(token);
 	}
 
 	// ==========================
@@ -118,8 +116,6 @@ public class JwtService {
 
 	private Key getSigningKey() {
 
-		byte[] keyBytes = Decoders.BASE64.decode(secret);
-
-		return Keys.hmacShaKeyFor(keyBytes);
+		return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 	}
 }

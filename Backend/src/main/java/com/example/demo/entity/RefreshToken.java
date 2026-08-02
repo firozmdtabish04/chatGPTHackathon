@@ -32,13 +32,13 @@ public class RefreshToken extends BaseEntity {
 	@Column(nullable = false)
 	private boolean revoked;
 
-	@Column(length = 100)
+	@Column(columnDefinition = "TEXT")
 	private String deviceName;
 
-	@Column(length = 150)
+	@Column(length = 255)
 	private String deviceId;
 
-	@Column(length = 50)
+	@Column(length = 100)
 	private String ipAddress;
 
 	@ManyToOne(fetch = FetchType.LAZY)

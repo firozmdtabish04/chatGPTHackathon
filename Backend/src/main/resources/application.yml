@@ -6,12 +6,12 @@ spring:
     url: jdbc:mysql://localhost:3306/meetmind_db?createDatabaseIfNotExist=true&useSSL=false
     username: root
     password: your_mysql_password
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
 
-  # Email Configuration (SMTP)
   mail:
     host: smtp.gmail.com
     port: 587
@@ -27,3 +27,8 @@ spring:
 openai:
   api:
     key: ${OPENAI_API_KEY:your_openai_api_key_here}
+
+jwt:
+  secret: your-super-secret-key-that-is-at-least-32-characters-long
+  access-expiration: 3600000
+  refresh-expiration: 604800000
