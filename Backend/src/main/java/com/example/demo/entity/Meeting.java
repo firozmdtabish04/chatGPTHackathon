@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
@@ -36,7 +37,8 @@ public class Meeting {
 
 	private String title;
 
-	@Column(columnDefinition = "LONGTEXT")
+	@Lob
+	@Column
 	private String transcript;
 
 	private LocalDateTime createdAt;
@@ -55,4 +57,5 @@ public class Meeting {
 	protected void onCreate() {
 		this.createdAt = LocalDateTime.now();
 	}
+
 }

@@ -94,8 +94,8 @@ public class SecurityConfig {
 
 				.authorizeHttpRequests(auth -> auth
 
-						.requestMatchers("/api/auth/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
-								"/v3/api-docs.yaml")
+						.requestMatchers("/api/auth/**", "/test-email", "/swagger-ui/**", "/swagger-ui.html",
+								"/v3/api-docs/**", "/v3/api-docs.yaml", "/api/otp/**")
 						.permitAll()
 
 						.anyRequest().authenticated())

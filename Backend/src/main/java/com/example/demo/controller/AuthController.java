@@ -1,6 +1,5 @@
 package com.example.demo.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.dto.request.LoginRequest;
 import com.example.demo.dto.request.RefreshTokenRequest;
 import com.example.demo.dto.request.RegisterRequest;
+import com.example.demo.dto.request.VerifyRegisterOtpRequest;
 import com.example.demo.dto.response.AuthResponse;
 import com.example.demo.service.AuthService;
 
@@ -27,9 +27,17 @@ public class AuthController {
 	private final AuthService authService;
 
 	@PostMapping("/register")
-	public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+	public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
 
-		return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
+		authService.register(request);
+
+		return ResponseEntity.ok("OTP sent to your email");
+	}
+
+	@PostMapping("/register/verify")
+	public ResponseEntity<AuthResponse> verifyRegisterOtp(@Valid @RequestBody VerifyRegisterOtpRequest request) {
+
+		return ResponseEntity.ok(authService.verifyRegistrationOtp(request));
 	}
 
 	@PostMapping("/login")
