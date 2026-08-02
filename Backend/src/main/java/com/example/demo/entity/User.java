@@ -36,5 +36,4 @@ public class User extends BaseEntity {
 
 	@Builder.Default
 	private boolean enabled = true;
-
 }

@@ -11,10 +11,10 @@ import About from "../pages/about/About";
 import Contact from "../pages/contact/Contact";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
-
+import Task from "../pages/task/Task";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Meetings from "../pages/meetings/Meetings";
-
+import Reminder from "../pages/remainder/Reminder";
 import NotFound from "../NotFound";
 
 const AppRoutes = () => {
@@ -41,6 +41,8 @@ const AppRoutes = () => {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/meetings" element={<Meetings />} />
+        <Route path="/tasks" element={<Task />} />
+        <Route path="/reminders" element={<Reminder />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
